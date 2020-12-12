@@ -33,7 +33,7 @@ int start_tx_ring(int tap_fd)
 {
     pthread_t thr;
 
-    return pthread_create(&thr, NULL, thread_tx_ring, &tap_fd); 
+    return pthread_create(&thr, NULL, thread_tx_ring, &tap_fd);
 }
 
 void* thread_tx_ring(void* args)

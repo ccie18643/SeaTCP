@@ -33,7 +33,7 @@ int start_rx_ring(int tap_fd)
 {
     pthread_t thr;
 
-    return pthread_create(&thr, NULL, thread_rx_ring, &tap_fd); 
+    return pthread_create(&thr, NULL, thread_rx_ring, &tap_fd);
 }
 
 void* thread_rx_ring(void* args)
@@ -41,7 +41,7 @@ void* thread_rx_ring(void* args)
     //byte* packet_rx = (byte*)malloc(2048);
     //int packet_rx_len = read(tap_fd, packet_rx, 2048);
     //pp_ether(packet_rx, packet_rx_len);
-    
+
     while(1) {
         sleep(1);
     }

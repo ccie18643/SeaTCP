@@ -55,7 +55,7 @@ int open_tap(char* tap_name)
     ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
     strncpy(ifr.ifr_name, tap_name, IFNAMSIZ);
 
-    int error = ioctl(tap_fd, TUNSETIFF, (void *)&ifr);
+    int error = ioctl(tap_fd, TUNSETIFF, (void*)&ifr);
     if(error < 0) {
         log_error("Error setting /dev/net/tun parameters with ioctl");
         close(tap_fd);

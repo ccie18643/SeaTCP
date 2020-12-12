@@ -46,8 +46,7 @@
  *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-struct s_ether_header
-{
+struct s_ether_header {
     byte dst[ETHER_ADDR_LEN];       /* destination mac address */
     byte src[ETHER_ADDR_LEN];       /* source mac destination */
     word type;                      /* type of carried protocol */
@@ -60,7 +59,7 @@ struct s_ether_header
 /*
  * Definitions of protocols (type)
  */
- 
+
 #include "ether_type.h"             /* definitions and print function */
 
 #endif /* _SEATCP_ETHER_H_ */

@@ -1,8 +1,11 @@
-CFLAGS=-DLOG_USE_COLOR -pthread
+CFLAGS=-Wall -DLOG_USE_COLOR -pthread
 
-all: clean seatcp
+all: clean format seatcp
 
 seatcp: rx_ring.o tx_ring.o pp_ether.o log.o
+
+format:
+	astyle --style=linux --indent=spaces --align-pointer=type --convert-tabs --max-code-length=160 --suffix=none *.h *.c
 
 clean:
 	rm -f seatcp *.o
