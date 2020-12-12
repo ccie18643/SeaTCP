@@ -34,7 +34,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "lib/log.h"
 #include "types.h"
 #include "rx_ring.h"
 #include "tx_ring.h"

@@ -29,7 +29,7 @@
 #include "ether.h"
 #include "ether_type.h"
 #include "pp_ether.h"
-#include "log.h"
+#include "lib/log.h"
 
 void pp_ether(byte* ether_packet_rx, int ether_packet_rx_len)
 {
