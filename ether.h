@@ -23,51 +23,44 @@
    ****************************************************************************
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 
-int open_tap(char* tap)
+#ifndef _SEATCP_ETHER_H_
+#define _SEATCP_ETHER_H_
+
+#include "types.h"
+
+
+#define ETHER_ADDR_LEN 6
+
+/*
+ *   Ethernet frame header
+ *
+ *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *   |                                                               >
+ *   +    Destination MAC Address    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *   >                               |                               >
+ *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+      Source MAC Address       +
+ *   >                                                               |
+ *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *   |           EtherType           |
+ *   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+
+struct s_ether_header
 {
-  struct ifreq ifr;
-  int fd, err;
+    byte dst[ETHER_ADDR_LEN];       /* destination mac address */
+    byte src[ETHER_ADDR_LEN];       /* source mac destination */
+    word type;                      /* type of carried protocol */
+};
 
-  if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
-    printf("Error opening /dev/net/tun\n");
-    return fd;
-  }
-  printf("Opened /dv/net/tun\n");
 
-  memset(&ifr, 0, sizeof(ifr));
-  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-  strncpy(ifr.ifr_name, tap, IFNAMSIZ);
+#define ETHER_HEADER_LEN sizeof(s_ether_header)
 
-  if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
-    printf("Error setting /dev/net/tun parameters with ioctl\n");
-    close(fd);
-    return err;
-  }
-  printf("Set /dev/net/tun parameters with ioctl\n");
 
-  return fd;
-}
+/*
+ * Definitions of protocols (type)
+ */
+ 
+#include "ether_type.h"             /* definitions and print function */
 
-int main(int argc, char** argv)
-{
-    char* tap = "tap7";
-    int tap_fd = 0;
-
-    if((tap_fd = open_tap(tap)) < 0)  {
-        printf("Error connecting to %s interface\n", tap);
-        exit(1);
-    }
-    printf("Connected to %s interface\n", tap);
-
-    char* packet_rx = (char*)malloc(2048);
-    read(tap_fd, packet_rx, 2048);
-}
+#endif /* _SEATCP_ETHER_H_ */
