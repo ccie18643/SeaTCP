@@ -33,7 +33,7 @@
 
 void pp_ether(byte* ether_packet_rx, int ether_packet_rx_len)
 {
-    struct s_ether_header* ether_header_rx = (void*)ether_packet_rx;
+    //struct s_ether_header* ether_header_rx = (void*)ether_packet_rx;
 
     log_debug("ETHER");
 }

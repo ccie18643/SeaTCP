@@ -24,26 +24,72 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <assert.h>
+#include <string.h>
 
+#include "types.h"
 #include "rx_ring.h"
+#include "lib/log.h"
 
-int start_rx_ring(int tap_fd)
+struct s_rx_ring* rx_ring__init(char* tap_name, int tap_fd, int buffer_size)
 {
-    pthread_t thr;
-
-    return pthread_create(&thr, NULL, thread_rx_ring, &tap_fd);
+    struct s_rx_ring* self = (struct s_rx_ring*)malloc(sizeof(struct s_rx_ring));
+    strncpy(self->tap_name, tap_name, 16);
+    self->tap_fd = tap_fd;
+    self->buffer_size = buffer_size;
+    self->run_thread = true;
+    assert(!pthread_create(&self->thread, NULL, rx_ring__thread, self));
+    return self;
 }
 
-void* thread_rx_ring(void* args)
+void* rx_ring__thread(void* _)
 {
-    //byte* packet_rx = (byte*)malloc(2048);
-    //int packet_rx_len = read(tap_fd, packet_rx, 2048);
-    //pp_ether(packet_rx, packet_rx_len);
+    struct s_rx_ring* self = (struct s_rx_ring*)_;
 
-    while(1) {
-        sleep(1);
+    log_debug("Started rx_ring thread for %s interface, descriptor %d, buffer size %d", self->tap_name, self->tap_fd, self->buffer_size);
+
+    self->buffer = (struct s_packet*)calloc(self->buffer_size, sizeof(struct s_packet));
+    self->buffer_write = self->buffer;
+    self->buffer_read = self->buffer;
+    sem_init(&self->buffer_write_sem, false, 0);
+
+    while(self->run_thread) {
+        if(self->buffer_write->fresh) {
+            log_warn("rx_ring - buffer full");
+            sleep(1);
+            continue;
+        }
+        self->buffer_write->len = read(self->tap_fd, self->buffer_write->data, 2048);
+        self->buffer_write->fresh = true;
+        sem_post(&self->buffer_write_sem);
+        log_debug("rx_ring - enqueued packet, %d bytes, queue position %d", self->buffer_write->len, self->buffer_write - self->buffer);
+        if(self->buffer_write == self->buffer + self->buffer_size) {
+            self->buffer_write = self->buffer;
+        } else {
+            self->buffer_write++;
+        }
     }
+
+    log_debug("Stoping rx_ring thread");
+    free(self->buffer);
+    free(self);
+    return NULL;
 }
+
+struct s_packet* rx_ring__dequeue(struct s_rx_ring* self)
+{
+    sem_wait(&self->buffer_write_sem);
+    assert(self->buffer_read->fresh);
+    struct s_packet* packet = self->buffer_read;
+    if(self->buffer_read == self->buffer + self->buffer_size) {
+        self->buffer_read = self->buffer;
+    } else {
+        self->buffer_read++;
+    }
+    return packet;
+}
+
 

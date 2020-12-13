@@ -27,7 +27,29 @@
 #ifndef _SEATCP_RX_RING_H_
 #define _SEATCP_RX_RING_H_
 
-int start_rx_ring(int);
-void* thread_rx_ring(void*);
+#include <pthread.h>
+#include <semaphore.h>
 
+
+struct s_packet {
+    int len;
+    int fresh;
+    byte data[2048];
+};
+
+struct s_rx_ring {
+    char tap_name[16];
+    int tap_fd;
+    int buffer_size;
+    int run_thread;
+    struct s_packet* buffer;
+    struct s_packet* buffer_write;
+    struct s_packet* buffer_read;
+    pthread_t thread;
+    sem_t buffer_write_sem;
+};
+
+
+struct s_rx_ring* rx_ring__init(char*, int, int);
+void* rx_ring__thread(void*);
 #endif /* _SEATCP_RX_RING_H_ */

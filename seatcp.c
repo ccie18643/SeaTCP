@@ -76,12 +76,12 @@ int main(int argc, char** argv)
         exit(1);
     }
     log_debug("Connected to %s interface", tap_name);
-    assert(!start_rx_ring(tap_fd));
-    assert(!start_tx_ring(tap_fd));
 
-    while(1) {
+    log_debug("Starting threads");
+    rx_ring__init(tap_name, tap_fd, 10);
+
+    while(true)
         sleep(1);
-    }
 
     return 0;
 }
