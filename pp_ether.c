@@ -24,6 +24,7 @@
 */
 
 #include <stdio.h>
+#include <arpa/inet.h>
 
 #include "types.h"
 #include "ether.h"
@@ -31,10 +32,13 @@
 #include "pp_ether.h"
 #include "lib/log.h"
 
+
 void pp_ether(byte* ether_packet_rx, int ether_packet_rx_len)
 {
-    //struct s_ether_header* ether_header_rx = (void*)ether_packet_rx;
+    struct s_ether_header* ether_header_rx = (void*)ether_packet_rx;
 
-    log_debug("ETHER");
+    char src[18], dst[18], type[8];
+    log_debug("ETHER %s > %s, 0x%04x (%s)", ether_ntoa(dst, ether_header_rx->dst),
+              ether_ntoa(src, ether_header_rx->src), ntohs(ether_header_rx->type), ether_type(type, ntohs(ether_header_rx->type)));
 }
 

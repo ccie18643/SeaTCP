@@ -31,7 +31,7 @@
  */
 
 #define ETHER_TYPE_MIN          0x0600  /* minimal value of ether_type field */
-#define ETHER_TYPE_IP           0x0800  /* IPv4 protocol */
+#define ETHER_TYPE_IP4          0x0800  /* IPv4 protocol */
 #define ETHER_TYPE_ARP          0x0806  /* address resolution protocol */
 #define ETHER_TYPE_IP6          0x86DD  /* IPv6 protocol */
 

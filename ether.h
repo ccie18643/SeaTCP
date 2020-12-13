@@ -53,6 +53,9 @@ struct s_ether_header {
 };
 
 
+char* ether_ntoa(char*, byte*);
+char* ether_type(char*, word);
+
 #define ETHER_HEADER_LEN sizeof(s_ether_header)
 
 

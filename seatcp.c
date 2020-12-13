@@ -25,60 +25,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <assert.h>
 #include <unistd.h>
 
 #include "lib/log.h"
 #include "types.h"
-#include "rx_ring.h"
-#include "tx_ring.h"
-#include "pp_ether.h"
+#include "ph.h"
 
-
-int open_tap(char* tap_name)
-{
-    int tap_fd = open("/dev/net/tun", O_RDWR);
-    if(tap_fd < 0) {
-        log_error("Error opening /dev/net/tun");
-        return tap_fd;
-    }
-    log_debug("Opened /dev/net/tun");
-
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-    strncpy(ifr.ifr_name, tap_name, IFNAMSIZ);
-
-    int error = ioctl(tap_fd, TUNSETIFF, (void*)&ifr);
-    if(error < 0) {
-        log_error("Error setting /dev/net/tun parameters with ioctl");
-        close(tap_fd);
-        return error;
-    }
-    log_debug("Set /dev/net/tun parameters with ioctl");
-
-    return tap_fd;
-}
 
 int main(int argc, char** argv)
 {
-    char* tap_name = "tap7";
-
-    int tap_fd = open_tap(tap_name);
-    if(tap_fd < 0) {
-        log_error("Error connecting to %s interface", tap_name);
-        exit(1);
-    }
-    log_debug("Connected to %s interface", tap_name);
-
-    log_debug("Starting threads");
-    rx_ring__init(tap_name, tap_fd, 10);
+    packet_handler__init();
 
     while(true)
         sleep(1);

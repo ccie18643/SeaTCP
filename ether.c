@@ -24,29 +24,41 @@
 */
 
 
-#ifndef _SEATCP_RX_RING_H_
-#define _SEATCP_RX_RING_H_
+#include <stdio.h>
 
-#include <pthread.h>
-#include <semaphore.h>
-
-#include "packet.h"
-
-struct s_rx_ring {
-    char tap_name[16];
-    int tap_fd;
-    int buffer_size;
-    int run_thread;
-    struct s_packet* buffer;
-    struct s_packet* buffer_write;
-    struct s_packet* buffer_read;
-    pthread_t thread;
-    sem_t buffer_write_sem;
-};
+#include "types.h"
+#include "ether.h"
+#include "ether_type.h"
 
 
-struct s_rx_ring* rx_ring__init(char*, int, int);
-void* rx_ring__thread(void*);
-struct s_packet* rx_ring__dequeue(struct s_rx_ring*);
+char* ether_ntoa(char* str, byte* addr)
+{
+    sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
+            *(addr + 0),
+            *(addr + 1),
+            *(addr + 2),
+            *(addr + 3),
+            *(addr + 4),
+            *(addr + 5));
 
-#endif /* _SEATCP_RX_RING_H_ */
+    return str;
+}
+
+char* ether_type(char* str, word type)
+{
+    switch(type) {
+    case ETHER_TYPE_ARP:
+        sprintf(str, "%s", "ARP");
+        break;
+    case ETHER_TYPE_IP4:
+        sprintf(str, "%s", "IPv4");
+        break;
+    case ETHER_TYPE_IP6:
+        sprintf(str, "%s", "IPv6");
+        break;
+    default:
+        sprintf(str, "%s", "UNK");
+    }
+
+    return str;
+}

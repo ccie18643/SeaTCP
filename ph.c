@@ -29,69 +29,75 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 #include "types.h"
+#include "ph.h"
 #include "rx_ring.h"
+#include "packet.h"
+#include "pp_ether.h"
 #include "lib/log.h"
 
-struct s_rx_ring* rx_ring__init(char* tap_name, int tap_fd, int buffer_size)
+struct s_packet_handler* packet_handler__init()
 {
-    struct s_rx_ring* self = (struct s_rx_ring*)malloc(sizeof(struct s_rx_ring));
-    strncpy(self->tap_name, tap_name, 16);
-    self->tap_fd = tap_fd;
-    self->buffer_size = buffer_size;
+    struct s_packet_handler* self = (struct s_packet_handler*)malloc(sizeof(struct s_packet_handler));
     self->run_thread = true;
-    self->buffer = (struct s_packet*)calloc(self->buffer_size, sizeof(struct s_packet));
-    assert(self->buffer != NULL);
-    self->buffer_write = self->buffer;
-    self->buffer_read = self->buffer;
-    sem_init(&self->buffer_write_sem, false, 0);
-    assert(!pthread_create(&self->thread, NULL, rx_ring__thread, self));
+    assert(!pthread_create(&self->thread, NULL, packet_handler__thread, self));
     return self;
 }
 
-void* rx_ring__thread(void* _)
+void* packet_handler__thread(void* _)
 {
-    struct s_rx_ring* self = (struct s_rx_ring*)_;
+    struct s_packet_handler* self = (struct s_packet_handler*)_;
 
-    log_debug("Started rx_ring thread for %s interface, descriptor %d, buffer size %d", self->tap_name, self->tap_fd, self->buffer_size);
+    log_debug("Started packet_handler thread");
+
+    char* tap_name = "tap7";
+
+    int tap_fd = open_tap(tap_name);
+    if(tap_fd < 0) {
+        log_error("Error connecting to %s interface", tap_name);
+        exit(1);
+    }
+    log_debug("Connected to %s interface", tap_name);
+
+    struct s_rx_ring* rx_ring = rx_ring__init(tap_name, tap_fd, 10);
 
     while(self->run_thread) {
-        if(self->buffer_write->fresh) {
-            log_warn("rx_ring - buffer full");
-            sleep(1);
-            continue;
-        }
-        self->buffer_write->len = read(self->tap_fd, self->buffer_write->data, 2048);
-        self->buffer_write->fresh = true;
-        sem_post(&self->buffer_write_sem);
-        log_debug("rx_ring - enqueued packet, %d bytes, queue position %d", self->buffer_write->len, self->buffer_write - self->buffer);
-        if(self->buffer_write == self->buffer + self->buffer_size) {
-            self->buffer_write = self->buffer;
-        } else {
-            self->buffer_write++;
-        }
+        struct s_packet* packet_rx = rx_ring__dequeue(rx_ring);
+        pp_ether(packet_rx->data, packet_rx->len);
+        packet_rx->fresh = false;
     }
 
-    log_debug("Stoping rx_ring thread");
-    free(self->buffer);
-    sem_destroy(&self->buffer_write_sem);
+    log_debug("Stoping packet_handler thread");
     free(self);
     return NULL;
 }
 
-struct s_packet* rx_ring__dequeue(struct s_rx_ring* self)
+int open_tap(char* tap_name)
 {
-    sem_wait(&self->buffer_write_sem);
-    assert(self->buffer_read->fresh);
-
-    struct s_packet* packet = self->buffer_read;
-    if(self->buffer_read == self->buffer + self->buffer_size) {
-        self->buffer_read = self->buffer;
-    } else {
-        self->buffer_read++;
+    int tap_fd = open("/dev/net/tun", O_RDWR);
+    if(tap_fd < 0) {
+        log_error("Error opening /dev/net/tun");
+        return tap_fd;
     }
-    return packet;
+    log_debug("Opened /dev/net/tun");
+
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
+    strncpy(ifr.ifr_name, tap_name, IFNAMSIZ);
+
+    int error = ioctl(tap_fd, TUNSETIFF, (void*)&ifr);
+    if(error < 0) {
+        log_error("Error setting /dev/net/tun parameters with ioctl");
+        close(tap_fd);
+        return error;
+    }
+    log_debug("Set /dev/net/tun parameters with ioctl");
+
+    return tap_fd;
 }
-
-
