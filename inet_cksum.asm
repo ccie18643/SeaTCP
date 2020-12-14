@@ -22,8 +22,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;
-; Arguments passed from C using rdi, rsi, rdx, rsi registers
-; Return value to be stored in rax register
+; Arguments passed from C 
+;
+; rdi - pointer to data block
+; rsi - length of data block
+; rdx - version of optional IP header for pseudo header computation
+; rcx - pointer to optional IP header for pseudo header computation
+; r8  - overide 16-bit IPv6 payload length field with 32-bit value for fragmented packets
+;
+;
+; Computed checksum value to be stored in rax register
 ;
 
                 global  inet_cksum
@@ -31,6 +39,46 @@
 
 inet_cksum:
                 xor rax, rax
+                cmp rdx, 4                  ; IPv4 pseudo header checksum computation requested
+                je phdr_v4
+                cmp rdx, 6                  ; IPv6 pseudo header checksum computation requested
+                je phdr_v6
+                jmp cksum_data              ; no pseudo header checksum computation requested
+
+phdr_v4:
+                xor rcx, rcx
+                mov cx, [rdx + 0x02]        ; packet length
+                add rax, rcx
+                xor rcx, rcx
+                mov cl, [rdx + 0x09]        ; protocol
+                add rax, rcx
+                xor rcx, rcx
+                mov ecx, [rdx + 0x0C]       ; source address
+                add rax, rcx
+                xor rcx, rcx
+                mov ecx, [rdx + 0x0C]       ; destination address
+                add rax, rcx
+                jmp cksum_data
+
+phdr_v6:
+                xor rcx, rcx
+                mov cx, [rdx + 0x04]        ; payload length
+                cmp r8, 0                   ; overide payload field value if 32-bit value available in r8 register
+                je no_pl_overide
+                mov rcx, r8
+
+no_pl_overide: 
+                add rax, rcx
+                xor rcx, rcx
+                mov cl, [rdx + 0x06]        ; next header
+                add rax, rcx
+                add rax, [rdx + 0x08]       ; source address
+                adc rax, [rdx + 0x10]       ; source address
+                adc rax, [rdx + 0x18]       ; destination address
+                adc rax, [rdx + 0x20]       ; destination address
+                adc rax, 0
+
+cksum_data:
                 cmp rsi, 1024
                 jl bytes_512
 
@@ -350,6 +398,7 @@ bytes_4:
                 xor rcx, rcx
                 mov ecx, [rdi]
                 add rax, rcx
+                adc rax, 0
                 add rdi, 4
                 sub rsi, 4
 
@@ -359,6 +408,7 @@ bytes_2:
                 xor rcx, rcx
                 mov cx, [rdi]
                 add rax, rcx
+                adc rax, 0
                 add rdi, 2
                 sub rsi, 2
 
@@ -368,6 +418,7 @@ bytes_1:
                 xor rcx, rcx
                 mov cl, [rdi]
                 add rax, rcx
+                adc rax, 0
 
 fold:
                 mov rcx, rax
@@ -380,6 +431,7 @@ fold:
                 and eax, 0xffff
                 add ax, cx
                 adc ax, 0
+
 
                 not rax
                 and rax, 0xffff
