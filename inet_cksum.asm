@@ -433,6 +433,5 @@ fold:
                 adc ax, 0
 
                 not rax
-                and rax, 0xffff
 
                 ret
