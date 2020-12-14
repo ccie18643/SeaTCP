@@ -1,7 +1,7 @@
 /*
    ****************************************************************************
    *                                                                          *
-   *  SeaTCP- Low latency TCP/IP stack                                       *
+   *  SeaTCP - Low latency TCP/IP stack                                       *
    *  Copyright (C) 2020  Sebastian Majewski                                  *
    *                                                                          *
    *  This program is free software: you can redistribute it and/or modify    *
