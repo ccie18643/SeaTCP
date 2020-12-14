@@ -18,7 +18,7 @@
    *  along with this program.  If not, see <https://www.gnu.org/licenses/>.  *
    *                                                                          *
    *  Author's email: ccie18643@gmail.com                                     *
-   *  Github repository: https://github.com/ccie18643/PyTCP                   *
+   *  Github repository: https://github.com/ccie18643/SeaTCP                   *
    *                                                                          *
    ****************************************************************************
 */
