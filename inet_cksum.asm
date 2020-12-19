@@ -80,7 +80,7 @@ no_pl_overide:
 
 cksum_data:
                 cmp rsi, 1024
-                jl bytes_512
+                jb bytes_512
 
 bytes_1024:
                 add rax, [rdi + 8 * 0x00]
@@ -219,7 +219,7 @@ bytes_1024:
 
 bytes_512:
                 cmp rsi, 512
-                jl bytes_256
+                jb bytes_256
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, [rdi + 8 * 0x02]
@@ -290,7 +290,7 @@ bytes_512:
 
 bytes_256:
                 cmp rsi, 256
-                jl bytes_128
+                jb bytes_128
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, [rdi + 8 * 0x02]
@@ -329,7 +329,7 @@ bytes_256:
 
 bytes_128:
                 cmp rsi, 128 
-                jl bytes_64
+                jb bytes_64
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, [rdi + 8 * 0x02]
@@ -352,7 +352,7 @@ bytes_128:
 
 bytes_64:
                 cmp rsi, 64 
-                jl bytes_32
+                jb bytes_32
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, [rdi + 8 * 0x02]
@@ -367,7 +367,7 @@ bytes_64:
 
 bytes_32:
                 cmp rsi, 32
-                jl bytes_16
+                jb bytes_16
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, [rdi + 8 * 0x02]
@@ -378,7 +378,7 @@ bytes_32:
 
 bytes_16:
                 cmp rsi, 16
-                jl bytes_8
+                jb bytes_8
                 add rax, [rdi + 8 * 0x00]
                 adc rax, [rdi + 8 * 0x01]
                 adc rax, 0
@@ -386,7 +386,7 @@ bytes_16:
                 sub rsi, 16
 bytes_8:
                 cmp rsi, 8
-                jl bytes_4
+                jb bytes_4
                 add rax, [rdi + 8 * 0x00]
                 adc rax, 0
                 add rdi, 8
@@ -394,7 +394,7 @@ bytes_8:
 
 bytes_4:
                 cmp rsi, 4
-                jl bytes_2
+                jb bytes_2
                 xor rcx, rcx
                 mov ecx, [rdi]
                 add rax, rcx
@@ -404,7 +404,7 @@ bytes_4:
 
 bytes_2:
                 cmp rsi, 2
-                jl bytes_1
+                jb bytes_1
                 xor rcx, rcx
                 mov cx, [rdi]
                 add rax, rcx
@@ -414,7 +414,7 @@ bytes_2:
 
 bytes_1:
                 cmp rsi, 1
-                jl fold
+                jb fold
                 xor rcx, rcx
                 mov cl, [rdi]
                 add rax, rcx
